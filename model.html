@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot avec Animation et Messages Automatiques</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-size: cover; /* Couverture de l'image de fond */
+            background-position: center; /* Centrer l'image */
+            overflow-y: auto;
+            transition: background-image 1s ease-in-out; /* Transition fluide pour le changement d'image */
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            position: relative; /* Positionnement relatif pour les éléments enfants */
+            z-index: 1; /* S'assurer que le contenu est au-dessus de l'image de fond */
+        }
+
+        .left-section {
+            flex: 1;
+            padding: 40px;
+            background-color: rgba(255, 255, 255, 0.8); /* Fond semi-transparent */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            max-width: 500px;
+        }
+
+        .left-section h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .left-section p {
+            font-size: 1.2rem;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .right-section {
+            flex: 1;
+            padding: 40px;
+            max-width: 500px;
+        }
+
+        .chatbot-container {
+            width: 100%;
+            height: 500px; 
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none; /* Masquer initialement */
+        }
+
+        .chatbot-container iframe {
+            width: 100%;
+            height: 100%; /* Hauteur de l'iframe à 100% du conteneur */
+            border: none; /* Suppression de la bordure de l'iframe */
+        }
+
+        .message-container {
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            display: inline-block;
+        }
+
+        .message.bot {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-start;
+        }
+
+        .message.user {
+            background-color: #ccc;
+            color: black;
+            align-self: flex-end;
+        }
+
+        .buttons-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .buttons-container button {
+            background-color: #5a379d;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 1rem;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .buttons-container button:hover {
+            background-color: rgb(62, 22, 62);
+        }
+
+        .btn-secondary {
+            background-color: #1e64ae;
+        }
+
+        button.btn-secondary:hover {
+            background-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Section de gauche : Texte et boutons -->
+        <div class="left-section animate__animated animate__fadeInLeft">
+            <h1>Chatbot pour répondre à vos questions</h1>
+            <p>Les chatbots offrent un support client instantané, 24 heures sur 24, 7 jours sur 7. Ils peuvent traiter des demandes courantes, fournir des informations sur des produits, et résoudre des problèmes simples sans intervention humaine. Cela permet aux entreprises de réduire les coûts et d'améliorer l'expérience client en offrant des réponses rapides.</p>
+        </div>
+
+        <!-- Section de droite : Chatbot et boutons -->
+        <div class="right-section">
+            <div class="message-container" id="messageContainer">
+                <!-- Messages automatiques défileront ici -->
+            </div>
+
+            <div class="chatbot-container animate__animated animate__fadeInRight" id="chatbotContainer">
+                <iframe src="" id="chatbot"></iframe>
+            </div>
+
+            <div class="buttons-container">
+                <button id="startChat" class="btn-secondary" style="display: none;">Appuyer ici pour commencer la conversation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messages = [
+            { type: 'bot', text: 'Bonjour! Bienvenue chez StarLab. Comment puis-je vous aider aujourd’hui?' },
+            { type: 'user', text: 'Je cherche des informations sur vos services.' },
+            { type: 'bot', text: 'Nous offrons une large gamme de services. Avez-vous un problème spécifique à résoudre?' },
+            { type: 'user', text: 'Oui, j’ai une fuite dans ma salle de bain.' },
+            { type: 'bot', text: 'Nous pouvons vous aider avec ça! Voulez-vous planifier une intervention?' },
+        ];
+
+        let currentMessageIndex = 0;
+        const messageContainer = document.getElementById('messageContainer');
+        const startChatButton = document.getElementById('startChat');
+
+        // Fonction pour afficher chaque message avec un délai
+        function showMessage() {
+            if (currentMessageIndex < messages.length) {
+                const messageData = messages[currentMessageIndex];
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', messageData.type);
+                messageDiv.innerText = messageData.text;
+                messageContainer.appendChild(messageDiv);
+
+                // Faire défiler vers le bas
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+
+                currentMessageIndex++;
+                setTimeout(showMessage, 2000); // Appeler la fonction à nouveau après 2 secondes
+            } else {
+                // Quand tous les messages sont affichés, montrer le bouton "Commencer la conversation"
+                startChatButton.style.display = 'inline-block';
+            }
+        }
+
+        // Démarrer l'affichage des messages après 1 seconde
+        setTimeout(showMessage, 1000);
+
+        // Lien du chatbot à utiliser une fois que l'utilisateur clique sur "Commencer la conversation"
+        const chatbotURL = 'https://mychatbot.star-lab.bj/chat/tTqxSn09aa8FZG7G8tgA0OS7QqcqGUkn/ZNhX9iqN98CHLJ5Lkb';
+
+        startChatButton.addEventListener('click', () => {
+            const chatbotContainer = document.getElementById('chatbotContainer');
+            const chatbotIframe = document.getElementById('chatbot');
+
+            // Montrer le chatbot avec animation
+            chatbotContainer.style.display = 'block';
+
+            // Charger le lien du chatbot
+            chatbotIframe.src = chatbotURL;
+
+            // Ajouter une animation lors de l'affichage
+            chatbotContainer.classList.add('animate__fadeInRight');
+        });
+
+        // Changement d'image de fond toutes les 10 secondes
+        const images = [
+            'url("images/pexels-ivo-rainha-527110-1261180.jpg")',
+            'url("images/pexels-ivo-rainha-527110-1290141.jpg")',
+            'url("images/pexels-reneterp-1581384.jpg")',
+            'url("images/monument-101632_1280.jpg")',
+            'url("images/flowers-4151900_1280.jpg")',
+            'url("images/pexels-artempodrez-5025486.jpg")',
+            'url("images/pexels-pixabay-260922.jpg")',
+            'url("images/pexels-ivo-rainha-527110-1261180.jpg")',
+            'url("images/pexels-kindelmedia-8566474.jpg")'
+        ]; // Remplacez les chemins par vos propres images
+
+        let imageIndex = 0;
+
+        setInterval(() => {
+            imageIndex = (imageIndex + 1) % images.length;
+            document.body.style.backgroundImage = images[imageIndex];
+        }, 20000); // Changer toutes les 20 secondes
+    </script>
+</body>
+</html>
